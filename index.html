@@ -168,6 +168,22 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
 .hist .vazio { color: var(--muted); font-size: 14px; margin: 0; }
 @media (max-width: 460px) { .card { padding: 18px; } .seg span { min-width: 64px; padding: 9px 8px; } .userbox .who { max-width: 150px; } }
 
+.tri-passos { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.tri-passos li { padding: 4px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.tri-passos li:first-child { border-top: 0; }
+.tri-rel { line-height: 1.55; overflow-wrap: anywhere; }
+.tri-rel h2, .tri-rel h3, .tri-rel h4 { margin: 18px 0 6px; font-size: 1.1rem; }
+.tri-rel ul { margin: 4px 0 8px; padding-left: 20px; }
+.tri-rel p { margin: 6px 0; }
+.aviso { background: var(--pink-soft, #fdeef2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin: 0 0 14px; }
+.admin-box { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; }
+.admin-box h2 { font-size: 1.1rem; margin-bottom: 2px; }
+.admin-box p { margin: 0; color: var(--muted); font-size: 14px; max-width: 40ch; }
+.rot-item { margin-top: 16px; }
+.rot-item .crit-head { margin-bottom: 10px; }
+.rot-item input[type="text"] { margin-bottom: 12px; }
+.rot-item textarea { min-height: 72px; }
+.field-label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -305,9 +321,74 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
         <p class="hint" id="roteiro-hint" aria-live="polite"></p>
         <button class="btn" id="btn-iniciar" type="button" disabled>Iniciar entrevista</button>
       </div>
+      <div class="card admin-box" id="admin-box" hidden>
+        <div>
+          <h2>Novo roteiro com IA</h2>
+          <p>Informe a vaga e a IA sugere 5 características com uma pergunta cada. Você revisa antes de salvar.</p>
+        </div>
+        <button class="btn small" id="btn-novo-roteiro" type="button">Criar roteiro</button>
+      </div>
+      <div class="card admin-box" id="tri-box" hidden>
+        <div>
+          <h2>Triagem com agente</h2>
+          <p>O agente lê as entrevistas de uma vaga, confere as notas e sugere até 3 finalistas. A decisão é sua.</p>
+        </div>
+        <button class="btn small" id="btn-triagem" type="button">Fazer triagem</button>
+      </div>
       <div class="card hist" id="hist" hidden>
         <h2>Entrevistas salvas</h2>
         <div id="hist-lista"></div>
+      </div>
+    </section>
+
+    <section id="tela-triagem" hidden>
+      <button class="back" id="btn-voltar-tri" type="button">← Voltar</button>
+      <h1>Triagem com agente</h1>
+      <p class="lead2">Escolha a vaga. O agente só lê os dados, não altera nada e não decide por você.</p>
+      <div class="card">
+        <p class="aviso"><b>Privacidade:</b> para a análise, o texto das respostas é enviado ao Gemini (Google), com os nomes trocados por códigos como Candidato_01. No plano gratuito, o Google pode usar esse conteúdo para melhorar seus produtos. Use dados reais só se a ONG aceitar isso.</p>
+        <label for="tri-vaga">Vaga</label>
+        <select id="tri-vaga"></select>
+        <p class="msg" id="msg-tri" role="status" aria-live="polite"></p>
+        <button class="btn" id="btn-rodar-tri" type="button">Rodar triagem</button>
+      </div>
+      <div class="card" id="tri-saida" hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2 style="margin:0;font-size:1.25rem">Relatório</h2>
+          <button class="btn ghost small" id="btn-copiar-tri" type="button">Copiar relatório</button>
+        </div>
+        <div class="tri-rel" id="tri-rel"></div>
+        <details style="margin-top:14px"><summary id="tri-resumo" style="cursor:pointer;font-weight:600"></summary><ul class="tri-passos" id="tri-passos"></ul></details>
+      </div>
+    </section>
+
+    <section id="tela-roteiro" hidden>
+      <button class="back" id="btn-voltar-rot" type="button">← Voltar aos roteiros</button>
+      <h1>Novo roteiro de entrevista</h1>
+      <p class="lead2">Diga qual é a vaga. A IA sugere as 5 características e as perguntas, e você ajusta o que quiser antes de salvar.</p>
+      <div class="card">
+        <div class="field">
+          <label for="rot-titulo">Nome da vaga</label>
+          <input type="text" id="rot-titulo" autocomplete="off" maxlength="120" placeholder="Ex.: Auxiliar de comportamento animal">
+        </div>
+        <div class="field">
+          <label for="rot-desc">O que a pessoa vai fazer na ONG <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+          <textarea id="rot-desc" maxlength="1500" placeholder="Ex.: Acompanhar cães em passeios e socialização, registrar o comportamento de cada um e ajudar a equipe nos fins de semana."></textarea>
+        </div>
+        <p class="msg" id="msg-gerar" role="status" aria-live="polite"></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="btn-manual" type="button" style="flex:1 1 200px">Escrever as perguntas</button>
+          <button class="btn ghost" id="btn-gerar" type="button" style="flex:1 1 200px;margin-top:4px">Sugerir com IA</button>
+        </div>
+        <p class="note" style="margin:12px 0 0">A sugestão com IA só funciona depois que a chave da IA for cadastrada no servidor. Escrever as perguntas à mão não tem custo nem depende de IA.</p>
+      </div>
+      <div id="rot-editor" hidden>
+        <div id="rot-itens"></div>
+        <div class="card" style="margin-top:16px">
+          <p class="note">Cada característica vale 2 pontos, no total de 10. Se já existir uma vaga com esse nome, este roteiro passa a ser o ativo e as entrevistas antigas continuam salvas.</p>
+          <p class="msg" id="msg-salvar-rot" role="status" aria-live="polite"></p>
+          <button class="btn" id="btn-salvar-rot" type="button">Salvar roteiro</button>
+        </div>
       </div>
     </section>
 
@@ -417,6 +498,7 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
   $("btn-sair").addEventListener("click", function () {
     sb.auth.signOut().then(function () {
       usuario = null; papel = null; atual = null; ROTEIROS = [];
+      $("admin-box").hidden = true; $("tri-box").hidden = true; $("tela-roteiro").hidden = true; $("tela-triagem").hidden = true;
       $("app").hidden = true; $("shell").hidden = false; verLogin("v-login"); $("email").focus();
     });
   });
@@ -426,7 +508,7 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
     if (!user) return;
     usuario = user;
     $("shell").hidden = true; $("app").hidden = false;
-    $("tela-avaliacao").hidden = true; $("tela-inicio").hidden = false;
+    $("tela-avaliacao").hidden = true; $("tela-triagem").hidden = true; $("tela-inicio").hidden = false;
     $("quem").textContent = user.email || "";
     $("papel").textContent = "Verificando…";
     banner("");
@@ -434,7 +516,7 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
     sb.from("papeis").select("papel").eq("user_id", user.id).maybeSingle().then(function (r) {
       if (r.error) { $("papel").textContent = "Sem verificação"; banner("Não consegui verificar o seu acesso. Saia e entre de novo."); return; }
       papel = r.data && r.data.papel;
-      if (papel === "admin") $("papel").textContent = "Administradora";
+      if (papel === "admin") { $("papel").textContent = "Administradora"; $("admin-box").hidden = false; $("tri-box").hidden = false; }
       else if (papel === "coordenador") $("papel").textContent = "Coordenador";
       else { $("papel").textContent = "Sem acesso"; $("roteiro").innerHTML = '<option value="">Acesso não liberado</option>'; banner("Sua conta ainda não tem um papel. Peça à administradora para liberar o acesso."); return; }
       carregarRoteiros();
@@ -579,6 +661,150 @@ select:focus-visible, textarea:focus-visible, .seg input:focus-visible + span { 
       btn.disabled = false;
       statusSalvo("error", traduz(e) + " Clique em Finalizar e salvar para tentar de novo. Repetir não duplica a entrevista.");
     });
+  });
+
+  /* ---------- Triagem com agente (só administradora) ---------- */
+  var ultimoRelatorio = "";
+  function mdSeguro(md) {
+    var linhas = String(md || "").split("\n"), out = [], lista = false;
+    function inline(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
+    function fecha() { if (lista) { out.push("</ul>"); lista = false; } }
+    linhas.forEach(function (l) {
+      var m;
+      if ((m = /^(#{1,4})\s+(.*)$/.exec(l))) { fecha(); var n = Math.min(m[1].length + 1, 4); out.push("<h" + n + ">" + inline(m[2]) + "</h" + n + ">"); }
+      else if ((m = /^\s*(?:[-*]|\d+\.)\s+(.*)$/.exec(l))) { if (!lista) { out.push("<ul>"); lista = true; } out.push("<li>" + inline(m[1]) + "</li>"); }
+      else if (!l.trim()) { fecha(); }
+      else { fecha(); out.push("<p>" + inline(l) + "</p>"); }
+    });
+    fecha();
+    return out.join("");
+  }
+  function abrirTriagem() {
+    var sel = $("tri-vaga"); sel.innerHTML = "";
+    ROTEIROS.forEach(function (x) { var o = document.createElement("option"); o.value = x.titulo; o.textContent = x.titulo; sel.appendChild(o); });
+    $("btn-rodar-tri").disabled = !ROTEIROS.length;
+    msg("msg-tri", "", ROTEIROS.length ? "" : "Nenhuma vaga ativa.");
+    $("tri-saida").hidden = true;
+    $("tela-inicio").hidden = true; $("tela-triagem").hidden = false; window.scrollTo(0, 0);
+  }
+  function erroTriagem(e) {
+    var padrao = "Não foi possível fazer a triagem agora. Tente de novo.";
+    if (e && e.context && typeof e.context.json === "function") {
+      return e.context.json().then(function (j) { return (j && j.erro) || padrao; }, function () { return padrao; });
+    }
+    return Promise.resolve(traduz(e));
+  }
+  $("btn-triagem").addEventListener("click", abrirTriagem);
+  $("btn-voltar-tri").addEventListener("click", function () { $("tela-triagem").hidden = true; $("tela-inicio").hidden = false; window.scrollTo(0, 0); });
+  $("btn-rodar-tri").addEventListener("click", function () {
+    var vaga = $("tri-vaga").value;
+    if (!vaga) { msg("msg-tri", "error", "Escolha uma vaga."); return; }
+    var b = $("btn-rodar-tri"); b.disabled = true; b.textContent = "O agente está trabalhando…";
+    msg("msg-tri", "", "Isso pode levar até um minuto."); $("tri-saida").hidden = true;
+    sb.functions.invoke("triagem-agente", { body: { vaga: vaga } }).then(function (r) {
+      if (r.error) { return erroTriagem(r.error).then(function (t) { msg("msg-tri", "error", t); }); }
+      var d = r.data || {};
+      ultimoRelatorio = String(d.relatorio || "");
+      $("tri-rel").innerHTML = mdSeguro(ultimoRelatorio);
+      var ul = $("tri-passos"); ul.innerHTML = "";
+      (d.passos || []).forEach(function (p) {
+        var li = document.createElement("li");
+        li.textContent = p.ferramenta + " " + (p.entrada || "") + " → " + p.resumo;
+        ul.appendChild(li);
+      });
+      $("tri-resumo").textContent = "O que o agente fez: " + (d.consultas || 0) + " consulta(s) em " + (d.iteracoes || 0) + " rodada(s)";
+      $("tri-saida").hidden = false; msg("msg-tri", "", "");
+    }, function (e) { return erroTriagem(e).then(function (t) { msg("msg-tri", "error", t); }); })
+    .then(function () { b.disabled = false; b.textContent = "Rodar triagem"; });
+  });
+  $("btn-copiar-tri").addEventListener("click", function () {
+    var b = $("btn-copiar-tri");
+    try {
+      navigator.clipboard.writeText(ultimoRelatorio).then(function () { b.textContent = "Copiado"; setTimeout(function () { b.textContent = "Copiar relatório"; }, 2000); },
+        function () { b.textContent = "Não consegui copiar"; });
+    } catch (e) { b.textContent = "Não consegui copiar"; }
+  });
+
+  /* ---------- Novo roteiro com IA (só administradora) ---------- */
+  function telaRoteiro(mostra) {
+    $("tela-roteiro").hidden = !mostra; $("tela-inicio").hidden = mostra; $("tela-avaliacao").hidden = true;
+    window.scrollTo(0, 0);
+  }
+  function erroFuncao(e) {
+    if (e && e.context && typeof e.context.json === "function") {
+      return e.context.json().then(function (j) { return (j && j.erro) || "Não foi possível gerar o roteiro."; }, function () { return "Não foi possível gerar o roteiro."; });
+    }
+    return Promise.resolve(traduz(e));
+  }
+  function mostrarRascunho(itens) {
+    var box = $("rot-itens"); box.innerHTML = "";
+    itens.forEach(function (it, i) {
+      var el = document.createElement("div"); el.className = "card rot-item";
+      el.innerHTML =
+        '<div class="crit-head"><span class="field-label" style="margin:0">Característica ' + (i + 1) + '</span><span class="crit-pts">2 pontos</span></div>' +
+        '<label for="rot-c-' + i + '">Nome da característica</label>' +
+        '<input type="text" id="rot-c-' + i + '" maxlength="80">' +
+        '<label for="rot-p-' + i + '">Pergunta para o candidato</label>' +
+        '<textarea id="rot-p-' + i + '" maxlength="300"></textarea>';
+      box.appendChild(el);
+      $("rot-c-" + i).value = it.caracteristica;
+      $("rot-p-" + i).value = it.pergunta;
+    });
+    $("btn-salvar-rot").disabled = false; $("btn-salvar-rot").textContent = "Salvar roteiro";
+    msg("msg-salvar-rot", "", "");
+    $("rot-editor").hidden = false;
+  }
+
+  $("btn-novo-roteiro").addEventListener("click", function () {
+    $("rot-titulo").value = ""; $("rot-desc").value = ""; $("rot-itens").innerHTML = "";
+    $("rot-editor").hidden = true; msg("msg-gerar", "", ""); msg("msg-salvar-rot", "", "");
+    telaRoteiro(true); $("rot-titulo").focus();
+  });
+  $("btn-voltar-rot").addEventListener("click", function () { telaRoteiro(false); });
+
+  $("btn-manual").addEventListener("click", function () {
+    var titulo = $("rot-titulo").value.trim();
+    if (titulo.length < 3) { msg("msg-gerar", "error", "Digite o nome da vaga."); $("rot-titulo").focus(); return; }
+    mostrarRascunho([1, 2, 3, 4, 5].map(function () { return { caracteristica: "", pergunta: "" }; }));
+    msg("msg-gerar", "ok", "Preencha as 5 características e as perguntas, depois salve.");
+    $("rot-c-0").focus();
+    $("rot-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  $("btn-gerar").addEventListener("click", function () {
+    var titulo = $("rot-titulo").value.trim();
+    if (titulo.length < 3) { msg("msg-gerar", "error", "Digite o nome da vaga."); $("rot-titulo").focus(); return; }
+    var btn = $("btn-gerar"); btn.disabled = true; msg("msg-gerar", "", "Gerando o roteiro… leva alguns segundos.");
+    sb.functions.invoke("gerar-roteiro", { body: { titulo: titulo, descricao: $("rot-desc").value.trim() } }).then(function (r) {
+      btn.disabled = false;
+      if (r.error) { erroFuncao(r.error).then(function (t) { msg("msg-gerar", "error", t); }); return; }
+      var itens = r.data && r.data.itens;
+      if (!itens || itens.length !== 5) { msg("msg-gerar", "error", "A IA devolveu um roteiro incompleto. Tente de novo."); return; }
+      mostrarRascunho(itens);
+      msg("msg-gerar", "ok", "Roteiro gerado. Revise e edite o que quiser antes de salvar.");
+      $("rot-editor").scrollIntoView({ behavior: "smooth", block: "start" });
+    }, function (e) { btn.disabled = false; erroFuncao(e).then(function (t) { msg("msg-gerar", "error", t); }); });
+  });
+
+  $("btn-salvar-rot").addEventListener("click", function () {
+    var titulo = $("rot-titulo").value.trim(), itens = [];
+    if (titulo.length < 3) { msg("msg-salvar-rot", "error", "Digite o nome da vaga, no topo da página."); return; }
+    for (var i = 0; i < 5; i++) {
+      var c = $("rot-c-" + i).value.trim(), p = $("rot-p-" + i).value.trim();
+      if (!c || !p) { msg("msg-salvar-rot", "error", "Preencha todas as características e perguntas."); return; }
+      itens.push({ caracteristica: c, pergunta: p });
+    }
+    var btn = $("btn-salvar-rot"); btn.disabled = true; msg("msg-salvar-rot", "", "Salvando…");
+    sb.rpc("salvar_roteiro", { p_titulo: titulo, p_itens: itens }).then(function (r) {
+      if (r.error) {
+        btn.disabled = false;
+        msg("msg-salvar-rot", "error", r.error.code === "P0001" ? r.error.message : traduz(r.error));
+        return;
+      }
+      btn.textContent = "Roteiro salvo";
+      msg("msg-salvar-rot", "ok", "Roteiro salvo. Ele já aparece na lista de roteiros para as entrevistas.");
+      carregarRoteiros();
+    }, function (e) { btn.disabled = false; msg("msg-salvar-rot", "error", traduz(e)); });
   });
 
   /* ---------- Início ---------- */
